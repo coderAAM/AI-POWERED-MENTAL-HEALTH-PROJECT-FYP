@@ -1,0 +1,350 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Psychwell API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: ai
+    description: AI mental-health chat operations
+  - name: doctors
+    description: Pakistani mental health doctor directory
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /ai/chat:
+    post:
+      operationId: aiChat
+      tags: [ai]
+      summary: Send a message to the Psychwell AI therapist (stateless, streamed)
+      description: |
+        Stateless chat endpoint. The client sends the full message history
+        plus user/language context. Returns a Server-Sent Events stream of
+        text chunks. Persistence is handled client-side in localStorage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+  /ai/assess:
+    post:
+      operationId: aiAssess
+      tags: [ai]
+      summary: Generate AI insights from a completed assessment
+      description: |
+        Takes the patient's assessment scores (anxiety, depression, stress,
+        Big Five) plus optional self-described emotion and recent mood notes
+        and returns a structured JSON care plan with sleep, food, exercise,
+        coping, and supplement suggestions. Disclaimer-only — not a medical
+        diagnosis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentInput"
+      responses:
+        "200":
+          description: AI-generated care plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentPlan"
+  /doctors:
+    get:
+      operationId: listDoctors
+      tags: [doctors]
+      summary: List Pakistani mental health doctors and hospitals
+      parameters:
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: specialty
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Doctor"
+  /doctors/{id}:
+    get:
+      operationId: getDoctor
+      tags: [doctors]
+      summary: Get a doctor by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Doctor details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Doctor"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /doctors/cities:
+    get:
+      operationId: listDoctorCities
+      tags: [doctors]
+      summary: List the distinct Pakistani cities that have doctors
+      responses:
+        "200":
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /doctors/specialties:
+    get:
+      operationId: listDoctorSpecialties
+      tags: [doctors]
+      summary: List the distinct doctor specialties
+      responses:
+        "200":
+          description: List of specialties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    ChatRole:
+      type: string
+      enum: [user, assistant, system]
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/ChatRole"
+        content:
+          type: string
+      required:
+        - role
+        - content
+    Language:
+      type: string
+      enum: [en, ur, both]
+      description: |
+        Preferred language. `en` = English only, `ur` = Urdu only,
+        `both` = bilingual reply (English with Urdu translation).
+    Persona:
+      type: string
+      enum: [therapist, doctor]
+      description: |
+        `therapist` = compassionate counselor for general mental health.
+        `doctor` = AI psychiatrist used by the in-app "Call AI Doctor" feature.
+    ChatRequest:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        language:
+          $ref: "#/components/schemas/Language"
+        persona:
+          $ref: "#/components/schemas/Persona"
+        userName:
+          type: string
+        emotion:
+          type: string
+          description: Self-described current emotion from the camera screen (optional).
+      required:
+        - messages
+        - language
+        - persona
+    AssessmentInput:
+      type: object
+      properties:
+        language:
+          $ref: "#/components/schemas/Language"
+        userName:
+          type: string
+        scores:
+          type: object
+          properties:
+            anxiety:
+              type: number
+              description: 0-21 GAD-7 style score
+            depression:
+              type: number
+              description: 0-27 PHQ-9 style score
+            stress:
+              type: number
+              description: 0-40 PSS style score
+            openness:
+              type: number
+            conscientiousness:
+              type: number
+            extraversion:
+              type: number
+            agreeableness:
+              type: number
+            neuroticism:
+              type: number
+          required:
+            - anxiety
+            - depression
+            - stress
+            - openness
+            - conscientiousness
+            - extraversion
+            - agreeableness
+            - neuroticism
+        emotion:
+          type: string
+        recentMoodNotes:
+          type: array
+          items:
+            type: string
+      required:
+        - language
+        - scores
+    CarePlanItem:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+      required:
+        - title
+        - detail
+    AssessmentPlan:
+      type: object
+      properties:
+        summary:
+          type: string
+        severity:
+          type: string
+          enum: [minimal, mild, moderate, severe]
+        sleep:
+          $ref: "#/components/schemas/CarePlanItem"
+        food:
+          $ref: "#/components/schemas/CarePlanItem"
+        exercise:
+          $ref: "#/components/schemas/CarePlanItem"
+        supplements:
+          $ref: "#/components/schemas/CarePlanItem"
+        coping:
+          type: array
+          items:
+            $ref: "#/components/schemas/CarePlanItem"
+        warning:
+          type: string
+          description: Red-flag warning if symptoms suggest professional help is urgent.
+      required:
+        - summary
+        - severity
+        - sleep
+        - food
+        - exercise
+        - supplements
+        - coping
+    Doctor:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        specialty:
+          type: string
+        qualifications:
+          type: string
+        hospital:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        feePkr:
+          type: integer
+        rating:
+          type: number
+        experienceYears:
+          type: integer
+        availableDays:
+          type: array
+          items:
+            type: string
+        bio:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - specialty
+        - qualifications
+        - hospital
+        - city
+        - address
+        - phone
+        - feePkr
+        - rating
+        - experienceYears
+        - availableDays
+        - bio
+        - languages

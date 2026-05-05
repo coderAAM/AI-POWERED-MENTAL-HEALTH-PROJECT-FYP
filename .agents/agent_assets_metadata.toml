@@ -1,0 +1,37 @@
+uploads = []
+
+[[generated]]
+id = "2Gkh_u4JBvpJP4kfV1aON"
+uri = "file://artifacts/psychwell/public/hero.png"
+type = "image"
+title = "Welcome hero illustration"
+
+[[generated]]
+id = "Kl1cpHjv_9tyZEzdYsAG9"
+uri = "file://artifacts/psychwell/public/logo.png"
+type = "image"
+title = "Psychwell logo mark"
+
+[[generated]]
+id = "FxsYs3YL_AB_lhJXTJfBG"
+uri = "file://artifacts/psychwell/public/bg-pattern.png"
+type = "image"
+title = "Dashboard soft background"
+
+[[generated]]
+id = "Q7hHTgpZehjoH86nnlp5U"
+uri = "file://artifacts/psychwell/src/assets/hero.png"
+type = "image"
+title = "calming hero illustration"
+
+[[generated]]
+id = "LG_LxqW6exHWv5uyIemZN"
+uri = "file://artifacts/psychwell/src/assets/logo.png"
+type = "image"
+title = "Psychwell brand mark"
+
+[[outputs]]
+id = "qTRbSldNLJGSD44lBq3t4"
+uri = "file://Psychwell_FYP_Thesis_2025.docx"
+type = "word_document"
+title = "Psychwell FYP Thesis 2025 — Complete DOCX"

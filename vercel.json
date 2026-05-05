@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/psychwell... run build",
+  "outputDirectory": "artifacts/psychwell/dist",
+  "devCommand": "pnpm --filter @workspace/psychwell run dev",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

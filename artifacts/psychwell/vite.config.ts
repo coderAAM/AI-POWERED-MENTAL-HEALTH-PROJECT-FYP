@@ -8,17 +8,33 @@ export default defineConfig(async ({ command }) => {
   const rawPort = process.env.PORT;
   const defaultPort = 5173;
 
+  // #region agent log (bd9638)
+  console.log("[bd9638][H1] vite.config.ts loaded", {
+    command,
+    hasPORT: Boolean(process.env.PORT),
+    hasBASE_PATH: Boolean(process.env.BASE_PATH),
+    nodeEnv: process.env.NODE_ENV ?? null,
+  });
+  // #endregion agent log (bd9638)
+
   let port = defaultPort;
   if (rawPort) {
     const parsed = Number(rawPort);
     if (!Number.isNaN(parsed) && parsed > 0) {
       port = parsed;
     } else if (command !== "build") {
+      // #region agent log (bd9638)
+      console.log("[bd9638][H2] invalid PORT (non-build)", { rawPort, parsed });
+      // #endregion agent log (bd9638)
       throw new Error(`Invalid PORT value: "${rawPort}"`);
     }
   }
 
   const basePath = process.env.BASE_PATH ?? "/";
+
+  // #region agent log (bd9638)
+  console.log("[bd9638][H3] computed settings", { port, basePath });
+  // #endregion agent log (bd9638)
 
   return {
     base: basePath,
